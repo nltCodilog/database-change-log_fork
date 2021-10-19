@@ -13,7 +13,7 @@ git clone https://github.com/nltCodilog/database-change-log_fork.git
 
 ###Composer
 ```bash
-php composer.phar require moledet/database-change-log
+php composer.phar require nlt_codilog/database-change-log_fork
 ```
 or add to yours _composer.json_ see [the documentation](https://getcomposer.org/doc/).
 ```json

@@ -1,5 +1,5 @@
 {
-  "name": "nltCodilog/database-change-log_fork",
+  "name": "nlt_codilog/database-change-log_fork",
   "description" : "A PHP class to log all changes of table data from raw SQL or with PDO statement",
   "license": "MIT",
   "keywords": [

@@ -219,7 +219,7 @@ class DatabaseChangeLog
         $logData['operatorReference'] = $parsed['WHERE'][1]['base_expr'];
         $logData['valueReference'] = $parsed['WHERE'][2]['base_expr'];
         foreach($parsed['WHERE'] as $where){
-             
+
             $whereString .= ' '.$where['base_expr'].' ';
         }
         $logData['whereClause'] = $whereString;
@@ -253,7 +253,7 @@ class DatabaseChangeLog
         if(empty($this->logTablesConfig)){
             return true;
         }
-    
+
         if(!array_key_exists($data['table'],$this->logTablesConfig)){
             return false;
         }
@@ -274,7 +274,7 @@ class DatabaseChangeLog
         if(in_array($data['column'],(array)$this->logTablesConfig[$data['table']][$data['action']])){
             return true;
         }
-        
+
         return false;
     }
 
@@ -287,36 +287,33 @@ class DatabaseChangeLog
      */
     private function saveLog($data, $groupId = 0)
     {
-       
+
         if(!$this->checkTableConfig($data)){
-         
+
             return false;
         }
- 
+        $data['system'] = $this->getSystemName();
         switch ($data['action']){
             case 'update':
                 $subQuery = "SELECT {$data['table']}.{$data['column']}
                              FROM  {$data['table']}
-                             WHERE {$data['columnReference']}  {$data['operatorReference']}  '{$data['valueReference']}' 
+                             WHERE {$data['columnReference']}  {$data['operatorReference']}  '{$data['valueReference']}'
                              LIMIT 1";//prevent errors on multi were conditions TODO: use mysql:GROUP_CONCAT or pgsql:array_to_string(array_agg(column), ',')
                 $req = $this->getConnection()->prepare($subQuery);
-                $req->execute();            
+                $req->execute();
                 $oldValue = $req->fetchColumn();
-               if($oldValue != $data['newValue']){
-                 $sql = "INSERT INTO data_change_log (data_change_log.action,data_change_log.table,data_change_log.column,newValue,columnReference,operatorReference,valueReference,whereClause,userId,ip,userAgent, system, oldValue,groupId) ".
-                        "VALUES  (:action,:table,:column,:newValue,:columnReference,:operatorReference,:valueReference,:whereClause,:userId,:ip,:userAgent,'{$this->getSystemName()}','$oldValue',$groupId);";
+                if ($oldValue != $data['newValue']) {
+                    $sql = "INSERT INTO data_change_log (`action`, `table`, `column`, newValue, columnReference, operatorReference, valueReference, whereClause, userId, ip, userAgent, `system`, oldValue, groupId)"
+                        . " VALUES  (:action, :table, :column, :newValue, :columnReference, :operatorReference, :valueReference, :whereClause, :userId, :ip, :userAgent, :system, '$oldValue', $groupId);";
                 }
                 break;
             case 'delete':
-                $sql = "INSERT INTO data_change_log (data_change_log.action,data_change_log.table,columnReference,operatorReference,valueReference,whereClause,userId,ip,userAgent, system,groupId) ".
-                       "VALUES  (:action,:table,:columnReference,:operatorReference,:valueReference,:whereClause,:userId,:ip,:userAgent,'{$this->getSystemName()}',$groupId);";
-
+                $sql = "INSERT INTO data_change_log (`action`, `table`, columnReference, operatorReference, valueReference, whereClause, userId, ip, userAgent, `system`,groupId)"
+                  . " VALUES  (:action, :table, :columnReference, :operatorReference, :valueReference, :whereClause, :userId, :ip, :userAgent, :system, $groupId);";
                 break;
             case 'insert':
-
-                $sql = "INSERT INTO data_change_log (data_change_log.action,data_change_log.table,data_change_log.column,newValue,userId,ip,userAgent, system,groupId) ".
-                        "VALUES (:action,:table,:column,:newValue,:userId,:ip,:userAgent,'{$this->getSystemName()}',$groupId);";
-
+                $sql = "INSERT INTO data_change_log (`action`, `table`, `column`, newValue,userId,ip,userAgent,`system`, groupId)"
+                  . " VALUES (:action, :table, :column, :newValue, :userId, :ip, :userAgent, :system, $groupId);";
                 break;
         }
         if($sql != ''){
@@ -382,7 +379,7 @@ class DatabaseChangeLog
         $logData['operatorReference'] = $parsed['WHERE'][1]['base_expr'];
         $logData['valueReference'] = $parsed['WHERE'][2]['base_expr'];
         foreach($parsed['WHERE'] as $where){
-             
+
             $whereString .= ' '.$where['base_expr'].' ';
         }
         $logData['whereClause'] = $whereString;
@@ -504,11 +501,11 @@ class DatabaseChangeLog
                 break;
             }
         }
-       
+
         if(!$needParse){
             return false;
         }
-        
+
 
         //check if in sql exist table/column from config
         foreach ($this->logTablesConfig as $table=>$columnConfig){
@@ -543,19 +540,19 @@ class DatabaseChangeLog
      */
     public function log($sql,$params = null)
     {
-        
+
         if(!$this->isNeedParse($sql)){
             return;
         }
-          
+
         if($params){
             $sql = $this->interpolateQuery($sql,$params);
         }
- 
+
         $parser = new PHPSQLParser();
         $parsed = $parser->parse($sql);
-      
- 
+
+
         if(isset($parsed['DELETE'])){
             $this->logDelete($parsed);
         }
